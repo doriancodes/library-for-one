@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Library For One</title>
+        <style>
+            body {
+                font-family: Arial;
+                margin: 40px;
+            }
+            form {
+                margin-bottom: 40px;
+                padding: 15px;
+                border: 1px solid #ccc;
+            }
+            input,
+            textarea,
+            select {
+                display: block;
+                margin-bottom: 10px;
+                width: 300px;
+            }
+            .book {
+                margin-bottom: 15px;
+                padding: 10px;
+                border: 1px solid #eee;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>📚 My Library</h1>
+
+        <h2>Add Book</h2>
+
+        <form action="/add" method="POST">
+            <input name="title" placeholder="Title" required />
+            <input name="author" placeholder="Author" required />
+            <input name="year" type="number" placeholder="Year" />
+            <input
+                name="rating"
+                type="number"
+                min="0"
+                max="5"
+                placeholder="Rating (0-5)"
+            />
+
+            <textarea name="description" placeholder="Description"></textarea>
+
+            <select name="type" required>
+                <option value="READ">READ</option>
+                <option value="TO_READ">TO_READ</option>
+            </select>
+
+            <button type="submit">Add Book</button>
+        </form>
+
+        <h2>✅ Read</h2>
+        {{range .Read}}
+        <div class="book">
+            <strong>{{.Title}}</strong> ({{.Year}}) <br />
+            Author: {{.Author}} <br />
+            Rating: {{.Rating}} ⭐ <br />
+            {{.Description}}
+        </div>
+        {{else}}
+        <p>No books read yet.</p>
+        {{end}}
+
+        <h2>📖 To Read</h2>
+        {{range .ToRead}}
+        <div class="book">
+            <strong>{{.Title}}</strong> ({{.Year}}) <br />
+            Author: {{.Author}} <br />
+            {{.Description}}
+        </div>
+        {{else}}
+        <p>No books planned.</p>
+        {{end}}
+    </body>
+</html>

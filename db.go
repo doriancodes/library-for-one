@@ -35,25 +35,6 @@ func InitDB() {
 		log.Fatal(err)
 	}
 
-	createTable()
-}
-
-func createTable() {
-	query := `
-	CREATE TABLE IF NOT EXISTS books (
-		id SERIAL PRIMARY KEY,
-		title TEXT,
-		author TEXT,
-		rating INT,
-		year INT,
-		description TEXT,
-		type TEXT
-	)`
-
-	_, err := db.Exec(query)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func AddBook(book Book) error {

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+
+	_ "github.com/lib/pq"
 )
 
 type BookType string
@@ -30,9 +33,43 @@ type PageData struct {
 	Recommendations []Book
 }
 
+var db *sql.DB
 var books []Book
 
+func initDB() {
+	query := `
+	CREATE TABLE IF NOT EXISTS books (
+		id SERIAL PRIMARY KEY,
+		title TEXT,
+		author TEXT,
+		rating INT,
+		year INT,
+		description TEXT,
+		type TEXT
+	);`
+
+	_, err := db.Exec(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
+
+	connStr := "host=db port=5432 user=postgres password=postgres dbname=library sslmode=disable"
+
+	var err error
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	initDB()
 
 	tmpl, err := template.ParseFiles("static/page.html")
 	if err != nil {
@@ -65,7 +102,28 @@ func main() {
 		var toReadBooks []Book
 		var recBooks []Book
 
-		for _, b := range books {
+		rows, err := db.Query("SELECT title, author, rating, year, description, type FROM books")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var b Book
+			err := rows.Scan(
+				&b.Title,
+				&b.Author,
+				&b.Rating,
+				&b.Year,
+				&b.Description,
+				&b.Type,
+			)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
 			if b.Type == Read {
 				readBooks = append(readBooks, b)
 			}
@@ -114,7 +172,21 @@ func main() {
 			Type:        BookType(r.FormValue("type")),
 		}
 
-		books = append(books, book)
+		//books = append(books, book)
+		_, err = db.Exec(
+			`INSERT INTO books (title, author, rating, year, description, type)
+			 VALUES ($1,$2,$3,$4,$5,$6)`,
+			book.Title,
+			book.Author,
+			book.Rating,
+			book.Year,
+			book.Description,
+			book.Type,
+		)
+
+		if err != nil {
+			log.Println(err)
+		}
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
